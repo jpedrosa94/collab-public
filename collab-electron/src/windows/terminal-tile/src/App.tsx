@@ -19,6 +19,17 @@ function App() {
   );
   const [exited, setExited] = useState(false);
   const [restored, setRestored] = useState(false);
+  const [fontFamily, setFontFamily] = useState("");
+  const [fontFamilyLoaded, setFontFamilyLoaded] = useState(false);
+
+  useEffect(() => {
+    window.api.getPref("terminalFontFamily")
+      .then((value) => {
+        if (typeof value === "string") setFontFamily(value);
+      })
+      .catch(() => {})
+      .finally(() => setFontFamilyLoaded(true));
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(
@@ -138,7 +149,7 @@ function App() {
     );
   }
 
-  if (!sessionId) {
+  if (!sessionId || !fontFamilyLoaded) {
     return (
       <div className="terminal-tile-loading">
         Connecting...
@@ -151,6 +162,7 @@ function App() {
       sessionId={sessionId}
       visible={true}
       restored={restored}
+      fontFamily={fontFamily}
     />
   );
 }
