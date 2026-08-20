@@ -3,6 +3,7 @@ import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import { WebglAddon } from "@xterm/addon-webgl";
 import { Unicode11Addon } from "@xterm/addon-unicode11";
+import { resolveTerminalFontFamily } from "@collab/shared/terminal-font";
 import { getTheme } from "./theme";
 import "@xterm/xterm/css/xterm.css";
 import "./TerminalTab.css";
@@ -18,12 +19,14 @@ interface TerminalTabProps {
 	sessionId: string;
 	visible: boolean;
 	restored?: boolean;
+	fontFamily?: string;
 }
 
 function TerminalTab({
 	sessionId,
 	visible,
 	restored,
+	fontFamily,
 }: TerminalTabProps) {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const fitRef = useRef<FitAddon | null>(null);
@@ -38,7 +41,7 @@ function TerminalTab({
 
 		const term = new Terminal({
 			theme: getTheme(),
-			fontFamily: 'Menlo, Monaco, "Courier New", monospace',
+			fontFamily: resolveTerminalFontFamily(fontFamily),
 			fontSize: 12,
 			fontWeight: "300",
 			fontWeightBold: "500",
