@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   GearSix,
   Keyboard,
@@ -9,6 +9,11 @@ import {
   Monitor,
   Terminal,
 } from "@phosphor-icons/react";
+import {
+  DEFAULT_TERMINAL_FONT_FAMILY,
+  TERMINAL_FONT_SUGGESTIONS,
+  resolveTerminalFontFamily,
+} from "@collab/shared/terminal-font";
 
 type ThemeMode = "light" | "dark" | "system";
 
@@ -379,6 +384,105 @@ function RadioOption({
   );
 }
 
+function familyResolves(family: string): boolean {
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return true;
+
+  const measure = (fontFamily: string): number | null => {
+    ctx.font = "10px sans-serif";
+    const sentinel = ctx.font;
+    ctx.font = `16px ${fontFamily}`;
+    if (ctx.font === sentinel) return null;
+    return ctx.measureText("MMMMWWWWiiii").width;
+  };
+
+  const familyWidth = measure(family);
+  const fallbackWidth = measure('"__no_such_family__"');
+  return familyWidth !== null
+    && fallbackWidth !== null
+    && familyWidth !== fallbackWidth;
+}
+
+function isMonospace(family: string): boolean {
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return true;
+
+  const width = (text: string) => {
+    ctx.font = `16px "${family}"`;
+    return ctx.measureText(text).width;
+  };
+
+  return Math.abs(width("iiiiiiiiii") - width("MMMMMMMMMM")) < 0.5;
+}
+
+function TerminalFontSetting() {
+  const [value, setValue] = useState("");
+  const suggestions = useMemo(
+    () => TERMINAL_FONT_SUGGESTIONS.filter(
+      (family) => familyResolves(family) && isMonospace(family),
+    ),
+    [],
+  );
+
+  useEffect(() => {
+    api.getPref("terminalFontFamily")
+      .then((pref) => {
+        if (typeof pref === "string") setValue(pref);
+      })
+      .catch(() => {});
+  }, []);
+
+  const available = useMemo(
+    () => value.trim() === "" || familyResolves(value),
+    [value],
+  );
+
+  return (
+    <div className="space-y-2">
+      <p className="text-sm font-medium">Terminal font</p>
+      <input
+        type="text"
+        value={value}
+        list="terminal-font-suggestions"
+        onChange={(event) => setValue(event.target.value)}
+        onBlur={() => {
+          void api.setPref("terminalFontFamily", value);
+        }}
+        aria-label="Terminal font family"
+        placeholder={DEFAULT_TERMINAL_FONT_FAMILY}
+        className="w-full rounded-md border bg-transparent px-3 py-2 text-sm outline-none placeholder:text-muted-foreground"
+        style={{
+          borderColor:
+            "color-mix(in srgb, var(--foreground) 15%, transparent)",
+          color: "var(--foreground)",
+        }}
+      />
+      <datalist id="terminal-font-suggestions">
+        {suggestions.map((family) => (
+          <option key={family} value={family} />
+        ))}
+      </datalist>
+      {!available && (
+        <p className="text-xs text-muted-foreground">
+          This font family does not appear to be installed.
+        </p>
+      )}
+      <p
+        className="rounded-md border px-3 py-2 text-sm"
+        style={{
+          borderColor:
+            "color-mix(in srgb, var(--foreground) 15%, transparent)",
+          fontFamily: resolveTerminalFontFamily(value),
+        }}
+      >
+        the quick brown fox &#xe0b0; &#xe0a0; &#xf07b; &#xf121;
+      </p>
+    </div>
+  );
+}
+
 function MacTerminalPane() {
   const [mode, setMode] = useState<TerminalMode>("sidecar");
 
@@ -418,6 +522,8 @@ function MacTerminalPane() {
           ))}
         </div>
       </div>
+
+      <TerminalFontSetting />
     </div>
   );
 }
@@ -467,6 +573,8 @@ function WindowsTerminalPane() {
           ))}
         </div>
       </div>
+
+      <TerminalFontSetting />
     </div>
   );
 }
