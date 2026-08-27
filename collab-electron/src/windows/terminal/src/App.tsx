@@ -62,10 +62,21 @@ function waitForSessionReady(sessionId: string): Promise<boolean> {
 function App() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [fontFamily, setFontFamily] = useState("");
+  const [fontFamilyLoaded, setFontFamilyLoaded] = useState(false);
   const sessionsRef = useRef(sessions);
   sessionsRef.current = sessions;
   const activeIdRef = useRef(activeId);
   activeIdRef.current = activeId;
+
+  useEffect(() => {
+    window.api.getPref("terminalFontFamily")
+      .then((value) => {
+        if (typeof value === "string") setFontFamily(value);
+      })
+      .catch(() => {})
+      .finally(() => setFontFamilyLoaded(true));
+  }, []);
 
   const createTab = useCallback(async (): Promise<Session> => {
     const config = await window.api.getConfig();
@@ -286,11 +297,12 @@ function App() {
         </button>
       </div>
       <div className="terminal-container">
-        {sessions.map((s) => (
+        {fontFamilyLoaded && sessions.map((s) => (
           <TerminalTab
             key={s.id}
             sessionId={s.id}
             visible={s.id === activeId}
+            fontFamily={fontFamily}
           />
         ))}
       </div>
