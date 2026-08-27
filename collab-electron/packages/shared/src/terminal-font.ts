@@ -1,5 +1,9 @@
+// Matches the font stack the released build ships. Menlo has no glyphs
+// in the private use area, so prompts drawn by Powerlevel10k or Starship
+// fall back to tofu without a Nerd Font ahead of it. Families that are
+// not installed are skipped by the CSS font fallback chain.
 export const DEFAULT_TERMINAL_FONT_FAMILY =
-  'Menlo, Monaco, "Courier New", monospace';
+  'MesloLGS NF, Menlo, Monaco, "Courier New", monospace';
 
 export const TERMINAL_FONT_SUGGESTIONS: readonly string[] = [
   "MesloLGS NF",
