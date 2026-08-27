@@ -10,6 +10,7 @@ import {
 } from "./tile-renderer.js";
 import { toCollabFileUrl } from "@collab/shared/collab-file-url";
 import { workspaceRootMatch } from "@collab/shared/path-utils";
+import { isBusyForeground } from "@collab/shared/terminal-status";
 import { attachDrag, attachResize } from "./tile-interactions.js";
 import { findAutoPlacement } from "./canvas-rpc.js";
 import {
@@ -934,6 +935,16 @@ export function createTileManager({
 		}
 	}
 
+	function setTerminalStatus(sessionId, foreground) {
+		const tile = tiles.find((t) => t.ptySessionId === sessionId);
+		if (!tile) return;
+		const dom = tileDOMs.get(tile.id);
+		if (!dom || !dom.statusDot) return;
+		dom.statusDot.classList.toggle(
+			"is-busy", isBusyForeground(foreground),
+		);
+	}
+
 	return {
 		initInProcessTerminals,
 		createCanvasTile,
@@ -953,6 +964,7 @@ export function createTileManager({
 		getCanvasStateForSave,
 		restoreCanvasState,
 		getTileDOMs: () => tileDOMs,
+		setTerminalStatus,
 		getFocusedTileId: () => focusedTileId,
 		getFocusedTile: () => getTile(focusedTileId),
 		setFocusedTileId: (id) => { focusedTileId = id; },

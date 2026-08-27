@@ -55,6 +55,12 @@ export function createTileDOM(tile, callbacks) {
   if (tile.folderPath) titleText.title = tile.folderPath;
   const titleGroup = document.createElement("div");
   titleGroup.className = "tile-title-group";
+  let statusDot = null;
+  if (tile.type === "term") {
+    statusDot = document.createElement("span");
+    statusDot.className = "tile-status-dot";
+    titleGroup.appendChild(statusDot);
+  }
   titleGroup.appendChild(titleText);
   titleBar.appendChild(titleGroup);
 
@@ -212,7 +218,7 @@ export function createTileDOM(tile, callbacks) {
   container.appendChild(contentArea);
   contentArea.appendChild(contentOverlay);
 
-  return { container, titleBar, titleText, contentArea, contentOverlay, closeBtn, urlInput, navBack, navForward, navReload };
+  return { container, titleBar, titleText, contentArea, contentOverlay, closeBtn, urlInput, navBack, navForward, navReload, statusDot };
 }
 
 export function getTileLabel(tile) {

@@ -628,6 +628,10 @@ async function init() {
 		},
 	});
 
+	window.shellApi.onPtyStatusChanged(({ sessionId, foreground }) => {
+		tileManager.setTerminalStatus(sessionId, foreground);
+	});
+
 	// -- Edge indicators --
 
 	const edgeIndicators = createEdgeIndicators({
